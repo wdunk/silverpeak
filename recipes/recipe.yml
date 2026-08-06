@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
 name: silverpeak
-description: Production-ready Fedora Silverblue with pinned versioning, native Steam, zero telemetry, controller drivers, automated maintenance, and pre-configured Flatpak permissions.
+description: Production-ready Fedora Silverblue with pinned versioning, Flatpak Steam, zero telemetry, controller drivers, automated maintenance, and pre-configured Flatpak permissions.
 
 # Base Image pinned explicitly to Fedora 44
 base-image: ghcr.io/ublue-os/silverblue-main
@@ -13,9 +13,7 @@ modules:
       - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
       - firefox-langpacks
     install:
-      # Gaming Stack
-      - steam                          # Native Steam client
-      - steam-devices                  # Controller & accessory udev rules
+      # Gaming & Performance Utilities (32-bit conflicts avoided by using Steam Flatpak)
       - gamemode                       # Performance optimization daemon
       - mangohud                       # Performance overlay
       
@@ -163,6 +161,7 @@ modules:
       - |
         flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
         flatpak install --system -y flathub \
+          com.valvesoftware.Steam \
           io.gitlab.librewolf-community \
           org.onlyoffice.desktopeditors \
           com.heroicgameslauncher.hgl \
