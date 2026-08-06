@@ -158,8 +158,6 @@ modules:
           com.valvesoftware.Steam \
           io.gitlab.librewolf-community \
           org.onlyoffice.desktopeditors \
-          com.heroicgameslauncher.hgl \
-          net.davidrevoy.ProtonUpQt \
           com.github.tchx84.Flatseal \
           com.spotify.Client \
           dev.vencord.Vesktop \
