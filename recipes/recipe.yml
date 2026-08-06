@@ -46,7 +46,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Performance Tweaks, Policies & Overrides
+  # System Scripts: Fonts, Privacy & Performance Tweaks, Dconf Overrides
   - type: script
     version: v1
     snippets:
@@ -145,7 +145,27 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-  # GNOME Desktop Extensions
+      # 8. Compile dconf keyfile settings (Desktop preferences & Privacy enforcement)
+      - |
+        mkdir -p /etc/dconf/db/local.d
+        cat <<'EOF' > /etc/dconf/db/local.d/00-custom
+        [org/gnome/shell]
+        enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'vitals@corecoding.com']
+
+        [org/gnome/desktop/peripherals/touchpad]
+        tap-to-click=true
+
+        [org/gnome/desktop/privacy]
+        report-technical-problems=false
+        send-software-usage-stats=false
+        location-accuracy-level='none'
+
+        [org/gnome/system/location]
+        enabled=false
+        EOF
+        dconf update
+
+  # GNOME Desktop Extensions Installation
   - type: gnome-extensions
     version: v1
     install:
@@ -153,29 +173,6 @@ modules:
       - dash-to-dock@micxgx.gmail.com            # Desktop dock
       - blur-my-shell@aunetx                     # Visual polish
       - vitals@corecoding.com                    # Hardware temperature & stats
-
-  # GNOME Desktop Configuration & Privacy Settings
-  - type: dconf
-    version: v1
-    entries:
-      - path: /org/gnome/shell/
-        settings:
-          enabled-extensions:
-            - 'appindicatorsupport@rgcjonas.gmail.com'
-            - 'dash-to-dock@micxgx.gmail.com'
-            - 'blur-my-shell@aunetx'
-            - 'vitals@corecoding.com'
-      - path: /org/gnome/desktop/peripherals/touchpad/
-        settings:
-          tap-to-click: true
-      - path: /org/gnome/desktop/privacy/
-        settings:
-          report-technical-problems: false
-          send-software-usage-stats: false
-          location-accuracy-level: 'none'
-      - path: /org/gnome/system/location/
-        settings:
-          enabled: false
 
   # Default Flatpak Application Provisioning
   - type: flatpaks
