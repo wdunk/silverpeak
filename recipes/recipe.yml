@@ -9,7 +9,6 @@ image-version: "44"
 modules:
   # Package management (install native RPMs & remove stock packages/telemetry)
   - type: rpm-ostree
-    version: v1
     remove:
       - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
       - firefox-langpacks
@@ -42,13 +41,11 @@ modules:
 
   # Kernel Modules (Xbox Controller Driver for Bluetooth / Rumble)
   - type: akmods
-    version: v1
     install:
       - xpadneo
 
   # System Scripts: Fonts, Privacy, Dconf Overrides, and Flatpaks
   - type: script
-    version: v1
     snippets:
       # 1. Download and extract Microsoft Core Fonts into system font directory
       - |
@@ -182,7 +179,6 @@ modules:
 
   # GNOME Desktop Extensions Installation
   - type: gnome-extensions
-    version: v1
     install:
       - appindicatorsupport@rgcjonas.gmail.com   # System tray icons
       - dash-to-dock@micxgx.gmail.com            # Desktop dock
@@ -191,8 +187,7 @@ modules:
 
   # Automated Background Services
   - type: systemd
-    version: v1
     system:
       enabled:
         - flatpak-uninstall-unused.timer        # Weekly Flatpak runtime garbage collection
-        - ublue-update.timer
+        - ublue-update.timer                    # Unified silent update daemon
