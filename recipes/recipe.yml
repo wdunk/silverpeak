@@ -144,9 +144,6 @@ modules:
         flatpak override --system --device=all --filesystem=/dev/sr0 ca.littlesvr.asunder
         flatpak override --system --filesystem=/mnt --filesystem=/media com.heroicgameslauncher.hgl
 
-  # Universal Blue Auto-Update Infrastructure
-  - type: ublue-update
-
   # GNOME Desktop Extensions & Privacy Enforcement
   - type: gnome-extensions
     install:
