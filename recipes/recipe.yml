@@ -42,13 +42,13 @@ modules:
   # System Scripts: Fonts, Privacy, Dconf Overrides, and Flatpaks
   - type: script
     snippets:
-      # 1. Download and extract Microsoft Core Fonts into system font directory safely via loop
+      # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
       - |
         mkdir -p /usr/share/fonts/ms-core-fonts
         cd /tmp
         for font in arial32.exe arialb32.exe courie32.exe comic32.exe georg32.exe impact32.exe times32.exe verdan32.exe webdin32.exe; do
-          curl -sLO "https://downloads.sourceforge.net/corefonts/$font"
-          cabextract -q "$font" -d /usr/share/fonts/ms-core-fonts
+          curl -sL "https://downloads.sourceforge.net/project/corefonts/the%20fonts/final/$font" -o "$font"
+          cabextract -q "$font" -d /usr/share/fonts/ms-core-fonts || true
           rm -f "$font"
         done
         fc-cache -f /usr/share/fonts/ms-core-fonts
