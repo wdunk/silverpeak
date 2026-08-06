@@ -46,7 +46,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy & Performance Tweaks, Dconf Overrides
+  # System Scripts: Fonts, Privacy, Dconf Overrides, and Flatpaks
   - type: script
     version: v1
     snippets:
@@ -165,6 +165,21 @@ modules:
         EOF
         dconf update
 
+      # 9. Enable Flathub & pre-install Flatpak applications during image build
+      - |
+        flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak install --system -y flathub \
+          io.gitlab.librewolf-community \
+          org.onlyoffice.desktopeditors \
+          com.heroicgameslauncher.hgl \
+          net.davidrevoy.ProtonUp-Qt \
+          com.github.tchx84.Flatseal \
+          com.spotify.Client \
+          dev.vencord.Vesktop \
+          io.mpv.Mpv \
+          ca.littlesvr.asunder \
+          com.mattjakeman.ExtensionManager
+
   # GNOME Desktop Extensions Installation
   - type: gnome-extensions
     version: v1
@@ -174,37 +189,10 @@ modules:
       - blur-my-shell@aunetx                     # Visual polish
       - vitals@corecoding.com                    # Hardware temperature & stats
 
-  # Default Flatpak Application Provisioning
-  - type: flatpaks
-    version: v1
-    notify: true
-    system:
-      install:
-        # Web & Browsers
-        - io.gitlab.librewolf-community         # Primary Privacy Browser
-        
-        # Office & Productivity
-        - org.onlyoffice.desktopeditors         # ONLYOFFICE Desktop Suite
-        
-        # Gaming & Game Tools
-        - com.heroicgameslauncher.hgl          # Heroic (Epic / GOG)
-        - net.davidrevoy.ProtonUp-Qt            # Proton-GE manager
-        - com.github.tchx84.Flatseal            # Flatpak Permission Manager
-        
-        # Media, Audio & CD Ripping
-        - com.spotify.Client                    # Spotify Client
-        - dev.vencord.Vesktop                   # Discord (Wayland fix)
-        - io.mpv.Mpv                            # Media Player
-        - ca.littlesvr.asunder                  # CD Ripper to FLAC
-        
-        # Desktop Utilities
-        - com.mattjakeman.ExtensionManager      # GNOME Extension Manager
-
   # Automated Background Services
   - type: systemd
     version: v1
     system:
       enabled:
-        - flatpak-automatic-system.timer        # Auto-update system flatpaks
         - flatpak-uninstall-unused.timer        # Weekly Flatpak runtime garbage collection
-        - ublue-update.timer                    # Unified silent update daemon
+        - ublue-update.timer
