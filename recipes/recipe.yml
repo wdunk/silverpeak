@@ -17,6 +17,12 @@ modules:
       - gamemode                       # Performance optimization daemon
       - mangohud                       # Performance overlay
       
+      # GNOME Desktop Extensions (Installed as system RPMs to avoid gnome.org build failures)
+      - gnome-shell-extension-appindicator
+      - gnome-shell-extension-dash-to-dock
+      - gnome-shell-extension-blur-my-shell
+      - gnome-shell-extension-vitals
+
       # Container Development & Workflows
       - distrobox                      # Isolated CLI containers (Ubuntu/Debian/Arch)
       
@@ -162,14 +168,6 @@ modules:
           org.videolan.VLC \
           ca.littlesvr.asunder \
           com.mattjakeman.ExtensionManager
-
-  # GNOME Desktop Extensions Installation
-  - type: gnome-extensions
-    install:
-      - appindicatorsupport@rgcjonas.gmail.com   # System tray icons
-      - dash-to-dock@micxgx.gmail.com            # Desktop dock
-      - blur-my-shell@aunetx                     # Visual polish
-      - vitals@corecoding.com                    # Hardware temperature & stats
 
   # Automated Background Services
   - type: systemd
