@@ -7,14 +7,11 @@ base-image: ghcr.io/ublue-os/silverblue-main
 image-version: "44"
 
 modules:
-  # Package management (install native RPMs & remove stock packages/telemetry)
+  # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
     remove:
       - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
       - firefox-langpacks
-      - abrt                           # Remove Automated Bug Reporting Tool
-      - abrt-desktop
-      - abrt-cli
     install:
       # Gaming Stack
       - steam                          # Native Steam client
