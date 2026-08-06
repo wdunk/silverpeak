@@ -1,6 +1,4 @@
----
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
 name: silverpeak
 description: Production-ready Fedora Silverblue with pinned versioning, native Steam, zero telemetry, controller drivers, automated maintenance, and pre-configured Flatpak permissions.
 
@@ -9,58 +7,48 @@ base-image: ghcr.io/ublue-os/silverblue-main
 image-version: "44"
 
 modules:
-  # Remove stock packages and telemetry collection tools
+  # Package management (install native RPMs & remove stock packages/telemetry)
   - type: rpm-ostree
+    version: v1
     remove:
       - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
       - firefox-langpacks
       - abrt                           # Remove Automated Bug Reporting Tool
       - abrt-desktop
       - abrt-cli
+    install:
+      # Gaming Stack
+      - steam                          # Native Steam client
+      - gamemode                       # Performance optimization daemon
+      - mangohud                       # Performance overlay
+      - game-device-udev-rules         # Extended controller & accessory rules
+      
+      # Container Development & Workflows
+      - distrobox                      # Isolated CLI containers (Ubuntu/Debian/Arch)
+      
+      # CLI & Terminal Utilities
+      - git
+      - gh                             # GitHub CLI
+      - btop                           # Modern process monitor
+      - fastfetch                      # System information display
+      - p7zip
+      - unzip
+      - rsync
+      - cabextract                     # Needed for MS Core Fonts extraction
+      
+      # Font & Media Enhancements
+      - fira-code-fonts                # Monospace terminal font
+      - google-noto-color-emoji-fonts
 
   # Kernel Modules (Xbox Controller Driver for Bluetooth / Rumble)
   - type: akmods
+    version: v1
     install:
       - xpadneo
 
-  # Base system package management and repositories
-  - type: dnf
-    # Explicitly prevent snapd from ever being pulled in as a dependency
-    exclude:
-      - snapd
-    repos:
-      free:
-        - rpmfusion
-      nonfree:
-        - rpmfusion
-    packages:
-      install:
-        packages:
-          # Gaming Stack
-          - steam                      # Native Steam client
-          - gamemode                   # Performance optimization daemon
-          - mangohud                   # Performance overlay
-          - game-device-udev-rules     # Extended controller & accessory rules
-          
-          # Container Development & Workflows
-          - distrobox                  # Isolated CLI containers (Ubuntu/Debian/Arch)
-          
-          # CLI & Terminal Utilities
-          - git
-          - gh                         # GitHub CLI
-          - btop                       # Modern process monitor
-          - fastfetch                  # System information display
-          - p7zip
-          - unzip
-          - rsync
-          - cabextract                 # Needed for MS Core Fonts extraction
-          
-          # Font & Media Enhancements
-          - fira-code-fonts            # Monospace terminal font
-          - google-noto-color-emoji-fonts
-
-  # Bake configuration files, privacy settings, font extraction, and timers
+  # System Scripts: Fonts, Performance Tweaks, Policies & Overrides
   - type: script
+    version: v1
     snippets:
       # 1. Download and extract Microsoft Core Fonts into system font directory
       - |
@@ -138,40 +126,60 @@ modules:
         pref("media.eme.enabled", true);
         EOF
 
-      # 7. Pre-configure system-wide Flatpak permissions (Flatseal overrides)
+      # 7. Pre-configure system-wide Flatpak overrides statically
       - |
-        flatpak override --system --filesystem=host io.gitlab.librewolf-community
-        flatpak override --system --device=all --filesystem=/dev/sr0 ca.littlesvr.asunder
-        flatpak override --system --filesystem=/mnt --filesystem=/media com.heroicgameslauncher.hgl
+        mkdir -p /etc/flatpak/overrides
+        cat <<'EOF' > /etc/flatpak/overrides/io.gitlab.librewolf-community
+        [Context]
+        filesystems=host
+        EOF
 
-  # GNOME Desktop Extensions & Privacy Enforcement
+        cat <<'EOF' > /etc/flatpak/overrides/ca.littlesvr.asunder
+        [Context]
+        devices=all
+        filesystems=/dev/sr0
+        EOF
+
+        cat <<'EOF' > /etc/flatpak/overrides/com.heroicgameslauncher.hgl
+        [Context]
+        filesystems=/mnt;/media
+        EOF
+
+  # GNOME Desktop Extensions
   - type: gnome-extensions
+    version: v1
     install:
       - appindicatorsupport@rgcjonas.gmail.com   # System tray icons
       - dash-to-dock@micxgx.gmail.com            # Desktop dock
       - blur-my-shell@aunetx                     # Visual polish
       - vitals@corecoding.com                    # Hardware temperature & stats
 
+  # GNOME Desktop Configuration & Privacy Settings
   - type: dconf
-    settings:
-      org/gnome/shell:
-        enabled-extensions:
-          - 'appindicatorsupport@rgcjonas.gmail.com'
-          - 'dash-to-dock@micxgx.gmail.com'
-          - 'blur-my-shell@aunetx'
-          - 'vitals@corecoding.com'
-      org/gnome/desktop/peripherals/touchpad:
-        tap-to-click: true
-      # Privacy Enforcement
-      org/gnome/desktop/privacy:
-        report-technical-problems: false
-        send-software-usage-stats: false
-        location-accuracy-level: 'none'
-      org/gnome/system/location:
-        enabled: false
+    version: v1
+    entries:
+      - path: /org/gnome/shell/
+        settings:
+          enabled-extensions:
+            - 'appindicatorsupport@rgcjonas.gmail.com'
+            - 'dash-to-dock@micxgx.gmail.com'
+            - 'blur-my-shell@aunetx'
+            - 'vitals@corecoding.com'
+      - path: /org/gnome/desktop/peripherals/touchpad/
+        settings:
+          tap-to-click: true
+      - path: /org/gnome/desktop/privacy/
+        settings:
+          report-technical-problems: false
+          send-software-usage-stats: false
+          location-accuracy-level: 'none'
+      - path: /org/gnome/system/location/
+        settings:
+          enabled: false
 
   # Default Flatpak Application Provisioning
-  - type: default-flatpaks
+  - type: flatpaks
+    version: v1
     notify: true
     system:
       install:
@@ -197,6 +205,7 @@ modules:
 
   # Automated Background Services
   - type: systemd
+    version: v1
     system:
       enabled:
         - flatpak-automatic-system.timer        # Auto-update system flatpaks
