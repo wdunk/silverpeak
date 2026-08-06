@@ -159,9 +159,7 @@ modules:
           io.gitlab.librewolf-community \
           org.onlyoffice.desktopeditors \
           com.github.tchx84.Flatseal \
-          com.spotify.Client \
-          dev.vencord.Vesktop \
-          io.mpv.Mpv \
+          org.videolan.VLC \
           ca.littlesvr.asunder \
           com.mattjakeman.ExtensionManager
 
