@@ -2,44 +2,206 @@
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
 # image will be published to ghcr.io/<user>/<name>
 name: silverpeak
-# description will be included in the image's metadata
-description: This is my personal OS image.
+description: Production-ready Fedora Silverblue with pinned versioning, native Steam, zero telemetry, controller drivers, automated maintenance, and pre-configured Flatpak permissions.
 
-# the base image to build on top of (FROM) and the version tag to use
+# Base Image pinned explicitly to Fedora 44
 base-image: ghcr.io/ublue-os/silverblue-main
-image-version: latest # You can pin to a specific version of Fedora as well
+image-version: "44"
 
-# module configuration, executed in order
-# you can include multiple instances of the same module
 modules:
-  - type: files
-    files:
-      - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
-
-  - type: dnf
-    repos:
-      copr:
-        - atim/starship
-    install:
-      packages:
-        - micro
-        - starship
+  # Remove stock packages and telemetry collection tools
+  - type: rpm-ostree
     remove:
-      packages:
-        # example: removing firefox (in favor of the flatpak)
-        # "firefox" is the main package, "firefox-langpacks" is a dependency
-        - firefox
-        - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+      - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
+      - firefox-langpacks
+      - abrt                           # Remove Automated Bug Reporting Tool
+      - abrt-desktop
+      - abrt-cli
 
+  # Kernel Modules (Xbox Controller Driver for Bluetooth / Rumble)
+  - type: akmods
+    install:
+      - xpadneo
+
+  # Base system package management and repositories
+  - type: dnf
+    # Explicitly prevent snapd from ever being pulled in as a dependency
+    exclude:
+      - snapd
+    repos:
+      free:
+        - rpmfusion
+      nonfree:
+        - rpmfusion
+    packages:
+      install:
+        packages:
+          # Gaming Stack
+          - steam                      # Native Steam client
+          - gamemode                   # Performance optimization daemon
+          - mangohud                   # Performance overlay
+          - game-device-udev-rules     # Extended controller & accessory rules
+          
+          # Container Development & Workflows
+          - distrobox                  # Isolated CLI containers (Ubuntu/Debian/Arch)
+          
+          # CLI & Terminal Utilities
+          - git
+          - gh                         # GitHub CLI
+          - btop                       # Modern process monitor
+          - fastfetch                  # System information display
+          - p7zip
+          - unzip
+          - rsync
+          - cabextract                 # Needed for MS Core Fonts extraction
+          
+          # Font & Media Enhancements
+          - fira-code-fonts            # Monospace terminal font
+          - google-noto-color-emoji-fonts
+
+  # Bake configuration files, privacy settings, font extraction, and timers
+  - type: script
+    snippets:
+      # 1. Download and extract Microsoft Core Fonts into system font directory
+      - |
+        mkdir -p /usr/share/fonts/ms-core-fonts
+        cd /tmp
+        curl -sL -O https://downloads.sourceforge.net/corefonts/arial32.exe \
+             -O https://downloads.sourceforge.net/corefonts/arialb32.exe \
+             -O https://downloads.sourceforge.net/corefonts/courie32.exe \
+             -O https://downloads.sourceforge.net/corefonts/comic32.exe \
+             -O https://downloads.sourceforge.net/corefonts/georg32.exe \
+             -O https://downloads.sourceforge.net/corefonts/impact32.exe \
+             -O https://downloads.sourceforge.net/corefonts/times32.exe \
+             -O https://downloads.sourceforge.net/corefonts/verdan32.exe \
+             -O https://downloads.sourceforge.net/corefonts/webdin32.exe
+        for exe in *.exe; do cabextract -q "$exe" -d /usr/share/fonts/ms-core-fonts; done
+        rm -rf /tmp/*.exe
+        fc-cache -f /usr/share/fonts/ms-core-fonts
+
+      # 2. Configure rpm-ostree automatic background staging safely in /usr/etc
+      - "mkdir -p /usr/etc && sed -i 's/#AutomaticUpdatePolicy=none/AutomaticUpdatePolicy=stage/' /usr/etc/rpm-ostreed.conf || echo 'AutomaticUpdatePolicy=stage' >> /usr/etc/rpm-ostreed.conf"
+      
+      # 3. Disable CountMe user metric pings
+      - "systemctl mask rpm-ostree-countme.timer"
+
+      # 4. Write gaming memory & kernel optimizations to vendor sysctl directory
+      - |
+        cat <<'EOF' > /usr/lib/sysctl.d/99-gaming-performance.conf
+        vm.max_map_count=2147483642
+        vm.swappiness=10
+        vm.dirty_background_ratio=5
+        vm.dirty_ratio=10
+        EOF
+
+      # 5. Create automatic weekly Flatpak garbage collection service
+      - |
+        cat <<'EOF' > /usr/lib/systemd/system/flatpak-uninstall-unused.service
+        [Unit]
+        Description=Clean unused Flatpak runtimes
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/flatpak uninstall --unused -y
+        EOF
+
+        cat <<'EOF' > /usr/lib/systemd/system/flatpak-uninstall-unused.timer
+        [Unit]
+        Description=Weekly unused Flatpak runtime cleanup
+        [Timer]
+        OnCalendar=weekly
+        Persistent=true
+        [Install]
+        WantedBy=timers.target
+        EOF
+
+      # 6. Bake LibreWolf DRM (Widevine) and Location preferences system-wide
+      - |
+        mkdir -p /usr/etc/firefox/policies /usr/etc/librewolf/policies
+        cat <<'EOF' > /usr/etc/librewolf/policies/policies.json
+        {
+          "policies": {
+            "EncryptedMediaExtensions": {
+              "Enabled": true
+            },
+            "Preferences": {
+              "geo.enabled": true,
+              "media.eme.enabled": true
+            }
+          }
+        }
+        EOF
+        cp /usr/etc/librewolf/policies/policies.json /usr/etc/firefox/policies/policies.json
+
+        mkdir -p /etc/skel/.var/app/io.gitlab.librewolf-community/.librewolf
+        cat <<'EOF' > /etc/skel/.var/app/io.gitlab.librewolf-community/.librewolf/librewolf.overrides.cfg
+        pref("geo.enabled", true);
+        pref("media.eme.enabled", true);
+        EOF
+
+      # 7. Pre-configure system-wide Flatpak permissions (Flatseal overrides)
+      - |
+        flatpak override --system --filesystem=host io.gitlab.librewolf-community
+        flatpak override --system --device=all --filesystem=/dev/sr0 ca.littlesvr.asunder
+        flatpak override --system --filesystem=/mnt --filesystem=/media com.heroicgameslauncher.hgl
+
+  # Universal Blue Auto-Update Infrastructure
+  - type: ublue-update
+
+  # GNOME Desktop Extensions & Privacy Enforcement
+  - type: gnome-extensions
+    install:
+      - appindicatorsupport@rgcjonas.gmail.com   # System tray icons
+      - dash-to-dock@micxgx.gmail.com            # Desktop dock
+      - blur-my-shell@aunetx                     # Visual polish
+      - vitals@corecoding.com                    # Hardware temperature & stats
+
+  - type: dconf
+    settings:
+      org/gnome/shell:
+        enabled-extensions:
+          - 'appindicatorsupport@rgcjonas.gmail.com'
+          - 'dash-to-dock@micxgx.gmail.com'
+          - 'blur-my-shell@aunetx'
+          - 'vitals@corecoding.com'
+      org/gnome/desktop/peripherals/touchpad:
+        tap-to-click: true
+      # Privacy Enforcement
+      org/gnome/desktop/privacy:
+        report-technical-problems: false
+        send-software-usage-stats: false
+        location-accuracy-level: 'none'
+      org/gnome/system/location:
+        enabled: false
+
+  # Default Flatpak Application Provisioning
   - type: default-flatpaks
-    configurations:
-      - notify: true # Send notification after install/uninstall is finished (true/false)
-        scope: system
-        # If no repo information is specified, Flathub will be used by default
-        install: # system flatpaks we want all users to have and not remove
-          - org.mozilla.firefox
-          - org.gnome.Loupe
-      - scope: user # Also add Flathub user repo, but no user packages
+    notify: true
+    system:
+      install:
+        # Web & Browsers
+        - io.gitlab.librewolf-community         # Primary Privacy Browser
+        
+        # Office & Productivity
+        - org.onlyoffice.desktopeditors         # ONLYOFFICE Desktop Suite
+        
+        # Gaming & Game Tools
+        - com.heroicgameslauncher.hgl          # Heroic (Epic / GOG)
+        - net.davidrevoy.ProtonUp-Qt            # Proton-GE manager
+        - com.github.tchx84.Flatseal            # Flatpak Permission Manager
+        
+        # Media, Audio & CD Ripping
+        - com.spotify.Client                    # Spotify Client
+        - dev.vencord.Vesktop                   # Discord (Wayland fix)
+        - io.mpv.Mpv                            # Media Player
+        - ca.littlesvr.asunder                  # CD Ripper to FLAC
+        
+        # Desktop Utilities
+        - com.mattjakeman.ExtensionManager      # GNOME Extension Manager
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  # Automated Background Services
+  - type: systemd
+    system:
+      enabled:
+        - flatpak-automatic-system.timer        # Auto-update system flatpaks
+        - flatpak-uninstall-unused.timer        # Weekly Flatpak runtime garbage collection
+        - ublue-update.timer                    # Unified silent update daemon
