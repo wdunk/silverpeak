@@ -42,21 +42,15 @@ modules:
   # System Scripts: Fonts, Privacy, Dconf Overrides, and Flatpaks
   - type: script
     snippets:
-      # 1. Download and extract Microsoft Core Fonts into system font directory
+      # 1. Download and extract Microsoft Core Fonts into system font directory safely via loop
       - |
         mkdir -p /usr/share/fonts/ms-core-fonts
         cd /tmp
-        curl -sL -O https://downloads.sourceforge.net/corefonts/arial32.exe \
-             -O https://downloads.sourceforge.net/corefonts/arialb32.exe \
-             -O https://downloads.sourceforge.net/corefonts/courie32.exe \
-             -O https://downloads.sourceforge.net/corefonts/comic32.exe \
-             -O https://downloads.sourceforge.net/corefonts/georg32.exe \
-             -O https://downloads.sourceforge.net/corefonts/impact32.exe \
-             -O https://downloads.sourceforge.net/corefonts/times32.exe \
-             -O https://downloads.sourceforge.net/corefonts/verdan32.exe \
-             -O https://downloads.sourceforge.net/corefonts/webdin32.exe
-        for exe in *.exe; do cabextract -q "$exe" -d /usr/share/fonts/ms-core-fonts; done
-        rm -rf /tmp/*.exe
+        for font in arial32.exe arialb32.exe courie32.exe comic32.exe georg32.exe impact32.exe times32.exe verdan32.exe webdin32.exe; do
+          curl -sLO "https://downloads.sourceforge.net/corefonts/$font"
+          cabextract -q "$font" -d /usr/share/fonts/ms-core-fonts
+          rm -f "$font"
+        done
         fc-cache -f /usr/share/fonts/ms-core-fonts
 
       # 2. Configure rpm-ostree automatic background staging safely in /usr/etc
