@@ -15,9 +15,9 @@ modules:
     install:
       # Gaming Stack
       - steam                          # Native Steam client
+      - steam-devices                  # Controller & accessory udev rules
       - gamemode                       # Performance optimization daemon
       - mangohud                       # Performance overlay
-      - game-device-udev-rules         # Extended controller & accessory rules
       
       # Container Development & Workflows
       - distrobox                      # Isolated CLI containers (Ubuntu/Debian/Arch)
