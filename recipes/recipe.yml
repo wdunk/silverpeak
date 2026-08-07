@@ -187,4 +187,3 @@ modules:
     system:
       enabled:
         - flatpak-uninstall-unused.timer        # Weekly Flatpak runtime garbage collection
-        - ublue-update.timer                    # Unified silent update daemon
