@@ -17,11 +17,9 @@ modules:
       - gamemode                       # Performance optimization daemon
       - mangohud                       # Performance overlay
       
-      # GNOME Desktop Extensions (Installed as system RPMs to avoid gnome.org build failures)
+      # GNOME Desktop Extensions available in Fedora base repos
       - gnome-shell-extension-appindicator
       - gnome-shell-extension-dash-to-dock
-      - gnome-shell-extension-blur-my-shell
-      - gnome-shell-extension-vitals
 
       # Container Development & Workflows
       - distrobox                      # Isolated CLI containers (Ubuntu/Debian/Arch)
@@ -45,7 +43,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, Dconf Overrides, and Flatpaks
+  # System Scripts: Fonts, Privacy, Extensions, Dconf Overrides, and Flatpaks
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -59,13 +57,28 @@ modules:
         done
         fc-cache -f /usr/share/fonts/ms-core-fonts
 
-      # 2. Configure rpm-ostree automatic background staging safely in /usr/etc
+      # 2. Download Blur my Shell and Vitals GNOME extensions directly into system storage
+      - |
+        mkdir -p /usr/share/gnome-shell/extensions/blur-my-shell@aunetx
+        mkdir -p /usr/share/gnome-shell/extensions/vitals@corecoding.com
+        
+        # Download and extract Blur my Shell
+        curl -sL https://github.com/aunetx/blur-my-shell/releases/latest/download/blur-my-shell@aunetx.zip -o /tmp/bms.zip
+        unzip -q -o /tmp/bms.zip -d /usr/share/gnome-shell/extensions/blur-my-shell@aunetx || true
+        rm -f /tmp/bms.zip
+
+        # Download and extract Vitals
+        curl -sL https://github.com/corecoding/Vitals/releases/latest/download/vitals@corecoding.com.zip -o /tmp/vitals.zip
+        unzip -q -o /tmp/vitals.zip -d /usr/share/gnome-shell/extensions/vitals@corecoding.com || true
+        rm -f /tmp/vitals.zip
+
+      # 3. Configure rpm-ostree automatic background staging safely in /usr/etc
       - "mkdir -p /usr/etc && sed -i 's/#AutomaticUpdatePolicy=none/AutomaticUpdatePolicy=stage/' /usr/etc/rpm-ostreed.conf || echo 'AutomaticUpdatePolicy=stage' >> /usr/etc/rpm-ostreed.conf"
       
-      # 3. Disable CountMe user metric pings
+      # 4. Disable CountMe user metric pings
       - "systemctl mask rpm-ostree-countme.timer"
 
-      # 4. Write gaming memory & kernel optimizations to vendor sysctl directory
+      # 5. Write gaming memory & kernel optimizations to vendor sysctl directory
       - |
         cat <<'EOF' > /usr/lib/sysctl.d/99-gaming-performance.conf
         vm.max_map_count=2147483642
@@ -74,7 +87,7 @@ modules:
         vm.dirty_ratio=10
         EOF
 
-      # 5. Create automatic weekly Flatpak garbage collection service
+      # 6. Create automatic weekly Flatpak garbage collection service
       - |
         cat <<'EOF' > /usr/lib/systemd/system/flatpak-uninstall-unused.service
         [Unit]
@@ -94,7 +107,7 @@ modules:
         WantedBy=timers.target
         EOF
 
-      # 6. Bake LibreWolf DRM (Widevine) and Location preferences system-wide
+      # 7. Bake LibreWolf DRM (Widevine) and Location preferences system-wide
       - |
         mkdir -p /usr/etc/firefox/policies /usr/etc/librewolf/policies
         cat <<'EOF' > /usr/etc/librewolf/policies/policies.json
@@ -118,7 +131,7 @@ modules:
         pref("media.eme.enabled", true);
         EOF
 
-      # 7. Pre-configure system-wide Flatpak overrides statically
+      # 8. Pre-configure system-wide Flatpak overrides statically
       - |
         mkdir -p /etc/flatpak/overrides
         cat <<'EOF' > /etc/flatpak/overrides/io.gitlab.librewolf-community
@@ -137,7 +150,7 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 8. Compile dconf keyfile settings (Desktop preferences & Privacy enforcement)
+      # 9. Compile dconf keyfile settings (Desktop preferences & Privacy enforcement)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
@@ -157,14 +170,17 @@ modules:
         EOF
         dconf update
 
-      # 9. Enable Flathub & pre-install Flatpak applications during image build
+      # 10. Enable Flathub & pre-install Flatpak applications during image build
       - |
         flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
         flatpak install --system -y flathub \
           com.valvesoftware.Steam \
           io.gitlab.librewolf-community \
           org.onlyoffice.desktopeditors \
+          com.heroicgameslauncher.hgl \
+          net.davidrevoy.ProtonUpQt \
           com.github.tchx84.Flatseal \
+          dev.vencord.Vesktop \
           org.videolan.VLC \
           ca.littlesvr.asunder \
           com.mattjakeman.ExtensionManager
