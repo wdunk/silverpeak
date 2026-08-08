@@ -25,8 +25,8 @@ modules:
   # Native GNOME Extensions module (properly fetches and registers extensions)
   - type: gnome-extensions
     install:
-      - blur-my-shell@aunetx
-      - vitals@corecoding.com
+      - 3193 # blur my shell
+      - 1460 # vitals
 
   # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
