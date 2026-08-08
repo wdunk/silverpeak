@@ -7,20 +7,21 @@ base-image: ghcr.io/ublue-os/silverblue-main
 image-version: "44"
 
 modules:
-  # Official BlueBuild module for system-wide Flatpaks
+  # Official BlueBuild module for system-wide Flatpaks (v2 syntax)
   - type: default-flatpaks
     notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      install:
-        - com.valvesoftware.Steam
-        - io.gitlab.librewolf-community
-        - org.onlyoffice.desktopeditors
-        - com.github.tchx84.Flatseal
-        - org.videolan.VLC
-        - ca.littlesvr.asunder
-        - com.mattjakeman.ExtensionManager
+    configurations:
+      - scope: system
+        repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+        repo-name: flathub
+        install:
+          - com.valvesoftware.Steam
+          - io.gitlab.librewolf-community
+          - org.onlyoffice.desktopeditors
+          - com.github.tchx84.Flatseal
+          - org.videolan.VLC
+          - ca.littlesvr.asunder
+          - com.mattjakeman.ExtensionManager
 
   # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
