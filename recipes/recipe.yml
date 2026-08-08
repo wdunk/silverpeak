@@ -7,8 +7,9 @@ base-image: ghcr.io/ublue-os/silverblue-main
 image-version: "44"
 
 modules:
-  # Pre-bake Flatpaks directly into system storage (/usr/share/flatpak)
-  - type: flatpak
+  # Official BlueBuild module for system-wide Flatpaks
+  - type: default-flatpaks
+    notify: true
     system:
       repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
       repo-name: flathub
@@ -27,7 +28,7 @@ modules:
       - firefox                        # Remove native Firefox (using LibreWolf Flatpak)
       - firefox-langpacks
     install:
-      # Gaming & Performance Utilities (32-bit conflicts avoided by using Steam Flatpak)
+      # Gaming & Performance Utilities
       - gamemode                       # Performance optimization daemon
       - mangohud                       # Performance overlay
       
