@@ -22,6 +22,12 @@ modules:
           - ca.littlesvr.asunder
           - com.mattjakeman.ExtensionManager
 
+  # Native GNOME Extensions module (properly fetches and registers extensions)
+  - type: gnome-extensions
+    install:
+      - blur-my-shell@aunetx
+      - vitals@corecoding.com
+
   # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
     remove:
@@ -58,7 +64,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, Extensions, MIME Associations, and Dconf Overrides
+  # System Scripts: Fonts, Privacy, MIME Associations, and Dconf Overrides
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -72,22 +78,7 @@ modules:
         done
         fc-cache -f /usr/share/fonts/ms-core-fonts
 
-      # 2. Download Blur my Shell and Vitals GNOME extensions directly into system storage
-      - |
-        mkdir -p /usr/share/gnome-shell/extensions/blur-my-shell@aunetx
-        mkdir -p /usr/share/gnome-shell/extensions/vitals@corecoding.com
-        
-        # Download and extract Blur my Shell
-        curl -sL https://github.com/aunetx/blur-my-shell/releases/latest/download/blur-my-shell@aunetx.zip -o /tmp/bms.zip
-        unzip -q -o /tmp/bms.zip -d /usr/share/gnome-shell/extensions/blur-my-shell@aunetx || true
-        rm -f /tmp/bms.zip
-
-        # Download and extract Vitals
-        curl -sL https://github.com/corecoding/Vitals/releases/latest/download/vitals@corecoding.com.zip -o /tmp/vitals.zip
-        unzip -q -o /tmp/vitals.zip -d /usr/share/gnome-shell/extensions/vitals@corecoding.com || true
-        rm -f /tmp/vitals.zip
-
-      # 3. Write rpm-ostree automatic background staging safely with explicit [Daemon] header
+      # 2. Write rpm-ostree automatic background staging safely with explicit [Daemon] header
       - |
         mkdir -p /usr/etc
         cat <<'EOF' > /usr/etc/rpm-ostreed.conf
@@ -95,10 +86,10 @@ modules:
         AutomaticUpdatePolicy=stage
         EOF
       
-      # 4. Disable CountMe user metric pings
+      # 3. Disable CountMe user metric pings
       - "systemctl mask rpm-ostree-countme.timer"
 
-      # 5. Write gaming memory & kernel optimizations to vendor sysctl directory
+      # 4. Write gaming memory & kernel optimizations to vendor sysctl directory
       - |
         cat <<'EOF' > /usr/lib/sysctl.d/99-gaming-performance.conf
         vm.max_map_count=2147483642
@@ -107,7 +98,7 @@ modules:
         vm.dirty_ratio=10
         EOF
 
-      # 6. Create automatic weekly Flatpak garbage collection service
+      # 5. Create automatic weekly Flatpak garbage collection service
       - |
         cat <<'EOF' > /usr/lib/systemd/system/flatpak-uninstall-unused.service
         [Unit]
@@ -127,7 +118,7 @@ modules:
         WantedBy=timers.target
         EOF
 
-      # 7. Bake LibreWolf DRM (Widevine) and Location preferences system-wide
+      # 6. Bake LibreWolf DRM (Widevine) and Location preferences system-wide
       - |
         mkdir -p /usr/etc/firefox/policies /usr/etc/librewolf/policies
         cat <<'EOF' > /usr/etc/librewolf/policies/policies.json
@@ -151,7 +142,7 @@ modules:
         pref("media.eme.enabled", true);
         EOF
 
-      # 8. Set LibreWolf Flatpak as System-Wide Default Web Browser & Handler
+      # 7. Set LibreWolf Flatpak as System-Wide Default Web Browser & Handler
       - |
         mkdir -p /etc/mimeapps.list.d
         cat <<'EOF' > /etc/xdg/mimeapps.list
@@ -163,7 +154,7 @@ modules:
         x-scheme-handler/unknown=io.gitlab.librewolf-community.desktop
         EOF
 
-      # 9. Pre-configure system-wide Flatpak overrides statically
+      # 8. Pre-configure system-wide Flatpak overrides statically
       - |
         mkdir -p /etc/flatpak/overrides
         cat <<'EOF' > /etc/flatpak/overrides/io.gitlab.librewolf-community
@@ -182,7 +173,7 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 10. Compile dconf keyfile settings (Desktop preferences, UI tweaks, Extensions & Privacy)
+      # 9. Compile dconf keyfile settings (Desktop preferences, UI tweaks, Extensions & Privacy)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
