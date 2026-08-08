@@ -7,19 +7,19 @@ base-image: ghcr.io/ublue-os/silverblue-main
 image-version: "44"
 
 modules:
-  # Containerfile module to bake Flatpaks directly during image compilation
-  - type: containerfile
-    snippets:
-      - |
-        RUN flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo && \
-            flatpak install --system -y flathub \
-              com.valvesoftware.Steam \
-              io.gitlab.librewolf-community \
-              org.onlyoffice.desktopeditors \
-              com.github.tchx84.Flatseal \
-              org.videolan.VLC \
-              ca.littlesvr.asunder \
-              com.mattjakeman.ExtensionManager
+  # Pre-bake Flatpaks directly into system storage (/usr/share/flatpak)
+  - type: flatpak
+    system:
+      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+      repo-name: flathub
+      install:
+        - com.valvesoftware.Steam
+        - io.gitlab.librewolf-community
+        - org.onlyoffice.desktopeditors
+        - com.github.tchx84.Flatseal
+        - org.videolan.VLC
+        - ca.littlesvr.asunder
+        - com.mattjakeman.ExtensionManager
 
   # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
@@ -86,8 +86,13 @@ modules:
         unzip -q -o /tmp/vitals.zip -d /usr/share/gnome-shell/extensions/vitals@corecoding.com || true
         rm -f /tmp/vitals.zip
 
-      # 3. Configure rpm-ostree automatic background staging safely in /usr/etc
-      - "mkdir -p /usr/etc && sed -i 's/#AutomaticUpdatePolicy=none/AutomaticUpdatePolicy=stage/' /usr/etc/rpm-ostreed.conf || echo 'AutomaticUpdatePolicy=stage' >> /usr/etc/rpm-ostreed.conf"
+      # 3. Write rpm-ostree automatic background staging safely with explicit [Daemon] header
+      - |
+        mkdir -p /usr/etc
+        cat <<'EOF' > /usr/etc/rpm-ostreed.conf
+        [Daemon]
+        AutomaticUpdatePolicy=stage
+        EOF
       
       # 4. Disable CountMe user metric pings
       - "systemctl mask rpm-ostree-countme.timer"
