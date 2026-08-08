@@ -57,7 +57,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, Extensions, and Dconf Overrides
+  # System Scripts: Fonts, Privacy, Extensions, MIME Associations, and Dconf Overrides
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -145,7 +145,19 @@ modules:
         pref("media.eme.enabled", true);
         EOF
 
-      # 8. Pre-configure system-wide Flatpak overrides statically
+      # 8. Set LibreWolf Flatpak as System-Wide Default Web Browser & Handler
+      - |
+        mkdir -p /etc/mimeapps.list.d
+        cat <<'EOF' > /etc/xdg/mimeapps.list
+        [Default Applications]
+        text/html=io.gitlab.librewolf-community.desktop
+        x-scheme-handler/http=io.gitlab.librewolf-community.desktop
+        x-scheme-handler/https=io.gitlab.librewolf-community.desktop
+        x-scheme-handler/about=io.gitlab.librewolf-community.desktop
+        x-scheme-handler/unknown=io.gitlab.librewolf-community.desktop
+        EOF
+
+      # 9. Pre-configure system-wide Flatpak overrides statically
       - |
         mkdir -p /etc/flatpak/overrides
         cat <<'EOF' > /etc/flatpak/overrides/io.gitlab.librewolf-community
@@ -164,15 +176,77 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 9. Compile dconf keyfile settings (Desktop preferences & Privacy enforcement)
+      # 10. Compile dconf keyfile settings (Desktop preferences, UI tweaks, Extensions & Privacy)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
         [org/gnome/shell]
         enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'vitals@corecoding.com']
+        favorite-apps=['io.gitlab.librewolf-community.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'com.valvesoftware.Steam.desktop', 'org.onlyoffice.desktopeditors.desktop', 'org.videolan.VLC.desktop', 'com.github.tchx84.Flatseal.desktop', 'com.mattjakeman.ExtensionManager.desktop']
+
+        [org/gnome/desktop/wm/preferences]
+        button-layout='appmenu:minimize,maximize,close'
+        auto-raise=true
+        focus-mode='click'
+
+        [org/gnome/mutter]
+        center-new-windows=true
+        edge-tiling=true
+        experimental-features=['scale-monitor-framebuffer']
+
+        [org/gnome/desktop/interface]
+        color-scheme='prefer-dark'
+        font-antialiasing='rgba'
+        font-hinting='slight'
+        show-battery-percentage=true
+        clock-show-weekday=true
+        clock-show-date=true
+        clock-format='12h'
+        action-middle-click-titlebar='lower'
 
         [org/gnome/desktop/peripherals/touchpad]
         tap-to-click=true
+        natural-scroll=true
+        two-finger-scrolling-enabled=true
+
+        [org/gnome/desktop/peripherals/keyboard]
+        delay=250
+        repeat-interval=30
+
+        [org/gnome/desktop/sound]
+        allow-volume-above-100-percent=true
+        event-sounds=false
+
+        [org/gnome/nautilus/preferences]
+        default-folder-viewer='list-view'
+        show-hidden-files=true
+        search-view-recursive='always'
+
+        [org/gnome/nautilus/list-view]
+        use-tree-view=true
+        default-zoom-level='small'
+
+        [org/gnome/shell/extensions/dash-to-dock]
+        dock-position='BOTTOM'
+        dash-max-icon-size=48
+        transparency-mode='FIXED'
+        background-opacity=0.3
+        dock-fixed=true
+        autohide=false
+        show-mounts=false
+        show-running-apps=true
+
+        [org/gnome/shell/extensions/blur-my-shell/panel]
+        blur=true
+        sigma=12
+        brightness=0.85
+
+        [org/gnome/shell/extensions/blur-my-shell/overview]
+        blur=true
+
+        [org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
+        blur=true
+        brightness=0.8
 
         [org/gnome/desktop/privacy]
         report-technical-problems=false
