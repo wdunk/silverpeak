@@ -9,7 +9,6 @@ image-version: "44"
 modules:
   # Official BlueBuild module for system-wide Flatpaks (v2 syntax)
   - type: default-flatpaks
-    notify: true
     configurations:
       - scope: system
         repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
