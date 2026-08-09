@@ -64,7 +64,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, MIME Associations, Terminal Auto-Fastfetch, and Dconf Overrides
+  # System Scripts: Fonts, Privacy, MIME Associations, Terminal Auto-Fastfetch, Panel CSS, and Dconf Overrides
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -182,7 +182,17 @@ modules:
         fi
         EOF
 
-      # 10. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock, Top Panel, & Applications Blur)
+      # 10. Inject GTK panel background color fallback rule
+      - |
+        mkdir -p /etc/skel/.config/gtk-3.0 /etc/skel/.config/gtk-4.0
+        cat <<'EOF' >> /etc/skel/.config/gtk-3.0/gtk.css
+        #panel, #panel .panel-button {
+            background-color: rgba(0, 0, 168, 0.48) !important;
+        }
+        EOF
+        cp /etc/skel/.config/gtk-3.0/gtk.css /etc/skel/.config/gtk-4.0/gtk.css
+
+      # 11. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock, Top Panel, & Applications Blur)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
@@ -256,10 +266,10 @@ modules:
         blur=true
         customize-color=true
         custom-background-color=true
-        color=[0.0, 0.0, 0.66, 0.48]
+        color='(0.0, 0.0, 0.66, 0.48)'
         sigma=12
         brightness=0.62
-        override-background=true
+        override-background-style=true
         style-panel=2
 
         [org/gnome/shell/extensions/blur-my-shell/overview]
