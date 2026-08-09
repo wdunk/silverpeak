@@ -64,7 +64,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, MIME Associations, Borland Theme, and Dconf Overrides
+  # System Scripts: Fonts, Privacy, MIME Associations, and Dconf Overrides
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -173,23 +173,7 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 9. Apply Borland Blue styling override to System Shell CSS
-      - |
-        cat <<'EOF' >> /usr/share/gnome-shell/theme/gnome-shell.css
-
-        /* Custom Borland Theme Overlay */
-        #panel {
-            background-color: rgba(0, 0, 168, 0.85) !important;
-            color: #ffffff !important;
-            font-weight: bold;
-        }
-
-        #panel .panel-button:hover {
-            background-color: rgba(0, 0, 220, 0.9) !important;
-        }
-        EOF
-
-      # 10. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock & Privacy)
+      # 9. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock Borland Colors & Privacy)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
