@@ -22,11 +22,11 @@ modules:
           - ca.littlesvr.asunder
           - com.mattjakeman.ExtensionManager
 
-  # Native GNOME Extensions module (properly fetches and registers extensions)
+  # Native GNOME Extensions module (using Extension IDs)
   - type: gnome-extensions
     install:
-      - 3193 # blur my shell
-      - 1460 # vitals
+      - 3193  # Blur my Shell
+      - 1460  # Vitals
 
   # Package management (install native RPMs & remove stock Firefox)
   - type: rpm-ostree
@@ -173,13 +173,21 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 9. Compile dconf keyfile settings (Desktop preferences, UI tweaks, Extensions & Privacy)
+      # 9. Compile dconf keyfile settings (Desktop preferences, UI tweaks, Extensions, Terminal & Privacy)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
         [org/gnome/shell]
         enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'vitals@corecoding.com']
-        favorite-apps=['io.gitlab.librewolf-community.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'com.valvesoftware.Steam.desktop', 'org.onlyoffice.desktopeditors.desktop', 'org.videolan.VLC.desktop', 'com.github.tchx84.Flatseal.desktop', 'com.mattjakeman.ExtensionManager.desktop']
+        favorite-apps=['io.gitlab.librewolf-community.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Ptyxis.desktop', 'com.valvesoftware.Steam.desktop', 'org.onlyoffice.desktopeditors.desktop', 'org.videolan.VLC.desktop', 'com.github.tchx84.Flatseal.desktop', 'com.mattjakeman.ExtensionManager.desktop']
+
+        [org/gnome/Ptyxis]
+        default-profile-uuid='fa0ab452f1f195552e060a5d6a7644f3'
+
+        [org/gnome/Ptyxis/Profiles/fa0ab452f1f195552e060a5d6a7644f3]
+        label='Borland Custom'
+        palette='Borland'
+        opacity=0.48
 
         [org/gnome/desktop/wm/preferences]
         button-layout='appmenu:minimize,maximize,close'
