@@ -256,9 +256,11 @@ modules:
         blur=true
         customize-color=true
         custom-background-color=true
-        background-color='rgba(0, 0, 168, 0.48)'
+        color=[0.0, 0.0, 0.66, 0.48]
         sigma=12
         brightness=0.62
+        override-background=true
+        style-panel=2
 
         [org/gnome/shell/extensions/blur-my-shell/overview]
         blur=true
