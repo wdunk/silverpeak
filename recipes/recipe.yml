@@ -64,7 +64,7 @@ modules:
     install:
       - xpadneo
 
-  # System Scripts: Fonts, Privacy, MIME Associations, and Dconf Overrides
+  # System Scripts: Fonts, Privacy, MIME Associations, Terminal Auto-Fastfetch, and Dconf Overrides
   - type: script
     snippets:
       # 1. Download and extract Microsoft Core Fonts via valid SourceForge mirror path
@@ -173,7 +173,16 @@ modules:
         filesystems=/mnt;/media
         EOF
 
-      # 9. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock Borland Colors & Privacy)
+      # 9. Auto-run fastfetch for interactive terminal sessions system-wide
+      - |
+        mkdir -p /etc/profile.d
+        cat <<'EOF' > /etc/profile.d/fastfetch.sh
+        if [ -n "$PS1" ] && command -v fastfetch >/dev/null 2>&1; then
+            fastfetch
+        fi
+        EOF
+
+      # 10. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock & Panel Borland Colors)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
@@ -237,7 +246,7 @@ modules:
         transparency-mode='FIXED'
         custom-background-color=true
         background-color='rgb(0, 0, 168)'
-        background-opacity=0.85
+        background-opacity=0.48
         dock-fixed=true
         autohide=false
         show-mounts=false
@@ -245,6 +254,9 @@ modules:
 
         [org/gnome/shell/extensions/blur-my-shell/panel]
         blur=true
+        customize-color=true
+        custom-background-color=true
+        background-color='rgba(0, 0, 168, 0.48)'
         sigma=12
         brightness=0.85
 
