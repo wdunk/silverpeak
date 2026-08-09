@@ -182,7 +182,7 @@ modules:
         fi
         EOF
 
-      # 10. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock & Panel Borland Colors)
+      # 10. Compile dconf keyfile settings (Desktop preferences, Extensions, Terminal, Dash to Dock, Top Panel, & Applications Blur)
       - |
         mkdir -p /etc/dconf/db/local.d
         cat <<'EOF' > /etc/dconf/db/local.d/00-custom
@@ -258,14 +258,28 @@ modules:
         custom-background-color=true
         background-color='rgba(0, 0, 168, 0.48)'
         sigma=12
-        brightness=0.85
+        brightness=0.62
 
         [org/gnome/shell/extensions/blur-my-shell/overview]
         blur=true
 
         [org/gnome/shell/extensions/blur-my-shell/dash-to-dock]
         blur=true
-        brightness=0.8
+        brightness=0.62
+
+        [org/gnome/shell/extensions/blur-my-shell/appblur]
+        blur=true
+        dynamic-blur=true
+        sigma=27
+        brightness=0.62
+        enable-border-radius=false
+        enable-border-radius-maximized=false
+        opacity=180
+        opaque-focused=false
+        blur-on-overview=false
+        enable-all=true
+        whitelist=['']
+        blacklist=['Plank', 'com.desktop.ding', 'Conky', 'org.gnome.Ptyxis']
 
         [org/gnome/desktop/privacy]
         report-technical-problems=false
